@@ -55,7 +55,7 @@ public class FileController {
         }
     }
     @GetMapping("/files")
-    public ResponseEntity<List<FileInfo>> getListFiles(Model model) {
+    public ResponseEntity<List<FileInfo>> getListFiles() {
         List<FileInfo> fileInfos = storageService.loadAll().map(path -> {
             String filename = path.getFileName().toString();
             String id = UUID.randomUUID().toString();
@@ -64,7 +64,7 @@ public class FileController {
             return new FileInfo(id, filename, url);
         }).collect(Collectors.toList());
         //fileInfos.forEach(fileInfo -> model.addAttribute("file", fileInfo.getName()));
-        model.addAttribute("fileList", fileInfos);
+        //model.addAttribute("fileList", fileInfos);
       // model.addAttribute("/files/file/{fileName}(fileName=${file.name})", "/files/file/{fileName}(fileName=${file.name})");
         return ResponseEntity.status(HttpStatus.OK).body(fileInfos);
     }
