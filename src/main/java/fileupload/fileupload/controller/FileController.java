@@ -1,9 +1,7 @@
 package fileupload.fileupload.controller;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.time.Instant;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import fileupload.fileupload.message.ResponseMessage;
@@ -43,33 +41,44 @@ public class FileController {
         String transactionId= UUID.randomUUID().toString();
         try {
             List<String> fileNames = new ArrayList<>();
-            Arrays.asList(files).stream().forEach(file -> {
+            Arrays.stream(files).forEach(file -> {
                 storageService.save(file);
                 fileNames.add(file.getOriginalFilename());
             });
             message = "Uploaded the files successfully: " + fileNames;
+            log.info(Date.from(Instant.now()) + " " + transactionId + " " + message);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessage(transactionId, message));
         } catch (Exception e) {
             message = "Fail to upload files!";
+            log.info(Date.from(Instant.now()) + " " + transactionId + " " + message);
             return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new ResponseMessage(transactionId, message));
         }
     }
     @GetMapping("/files")
-    public String/*ResponseEntity<List<FileInfo>>*/ getListFiles(Model model) {
+    public ResponseEntity<List<FileInfo>> getListFiles(Model model) {
         List<FileInfo> fileInfos = storageService.loadAll().map(path -> {
             String filename = path.getFileName().toString();
+            String id = UUID.randomUUID().toString();
             String url = MvcUriComponentsBuilder
                     .fromMethodName(FileController.class, "getFile", path.getFileName().toString()).build().toString();
-            return new FileInfo(filename, url);
+            return new FileInfo(id, filename, url);
         }).collect(Collectors.toList());
         //fileInfos.forEach(fileInfo -> model.addAttribute("file", fileInfo.getName()));
         model.addAttribute("fileList", fileInfos);
-        return "fileList"/*ResponseEntity.status(HttpStatus.OK).body(fileInfos)*/;
+      // model.addAttribute("/files/file/{fileName}(fileName=${file.name})", "/files/file/{fileName}(fileName=${file.name})");
+        return ResponseEntity.status(HttpStatus.OK).body(fileInfos);
     }
     @GetMapping("/files/{filename:.+}")
     @ResponseBody
     public ResponseEntity<Resource> getFile(@PathVariable String filename) {
         Resource file = storageService.load(filename);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"").body(file);
+    }
+    @GetMapping("/files/file/{fileName}")
+    @ResponseBody
+    public ResponseEntity<Resource> downloadFile(@PathVariable String fileName) {
+        Resource file = storageService.load(fileName);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"").body(file);
     }

@@ -10,12 +10,17 @@
     <tr>
         <th>Name</th>
         <th>Url</th>
+        <th>Retrieve</th>
     </tr>
     </thead>
     <tbody>
     <tr th:each="file : ${fileList}">
         <td th:text="${file.name}"></td>
         <td th:text="${file.url}"></td>
+        <td>
+            <a th:href="@{/files/file/{fileName}(fileName=${file.name})}">Downlaod</a>
+            <!--                        th:action="@{/csi/clip/deleteAutoLossPedestrian(pedestrianId=${pedestrian.getId()})}" th:method="GET"-->
+        </td>
     </tr>
     </tbody>
 </table>
